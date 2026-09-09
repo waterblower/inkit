@@ -503,11 +503,24 @@ fn image_hover_formats_paths_and_errors() {
     let uri = f.uri("story/main.ink");
     let decode = |result: Value| {
         let md = result["contents"]["value"].as_str().unwrap();
-        let data = md
-            .strip_prefix("![Image preview](data:image/png;base64,")
-            .expect(md)
-            .strip_suffix(')')
-            .unwrap();
+        // Verify the Markdown structure, not just our own string prefix: Zed
+        // uses pulldown-cmark to discover embedded image destinations.
+        let images: Vec<_> = pulldown_cmark::Parser::new(md)
+            .filter_map(|event| match event {
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::Image { dest_url, .. }) => {
+                    Some(dest_url.into_string())
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(images.len(), 1, "Hover must parse as an image");
+        let destination = &images[0];
+        assert!(
+            destination.starts_with("data:image/png;base64,")
+                || destination.starts_with("data:image/jpeg;base64,")
+        );
+        assert!(md.len() <= 8_192);
+        let data = destination.split_once(',').unwrap().1;
         image::load_from_memory(
             &base64::engine::general_purpose::STANDARD
                 .decode(data)
@@ -516,6 +529,31 @@ fn image_hover_formats_paths_and_errors() {
         .unwrap()
         .to_rgba8()
     };
+    // Photo-like data produces a long base64 URL, unlike uniform test images.
+    let mut noise = image::RgbaImage::new(320, 200);
+    let mut seed = 1_u32;
+    for pixel in noise.pixels_mut() {
+        seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        *pixel = image::Rgba(seed.to_le_bytes());
+    }
+    noise.save(f.directory.path().join("noise.png")).unwrap();
+    let text = "# image: ../noise.png\n";
+    f.workspace.open_document(uri.clone(), text.into(), 1);
+    let result = f.workspace.hover(&uri, position_at(text, 12));
+    let dimensions = decode(result).dimensions();
+    assert!(dimensions.0 > 0 && dimensions.0 <= 320 && dimensions.1 > 0 && dimensions.1 <= 200);
+    for pixel in noise.pixels_mut() {
+        pixel[3] = 255;
+    }
+    noise.save(f.directory.path().join("noise.png")).unwrap();
+    let result = f.workspace.hover(&uri, position_at(text, 12));
+    assert!(
+        result["contents"]["value"]
+            .as_str()
+            .unwrap()
+            .contains("data:image/jpeg;base64,")
+    );
+    decode(result);
     for (ext, format) in [
         ("png", ImageFormat::Png),
         ("jpg", ImageFormat::Jpeg),

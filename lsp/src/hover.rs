@@ -24,17 +24,55 @@ impl Workspace {
             return Value::Null;
         };
         let value = &document.text[start..end];
-        let result = resolve_path(uri, value).and_then(|path| preview(&path));
+        let result = resolve_path(uri, value)
+            .and_then(|path| preview(&path))
+            .and_then(embedded_preview);
         let markdown = match result {
-            Ok(png) => format!(
-                "![Image preview](data:image/png;base64,{})",
-                STANDARD.encode(png)
-            ),
+            Ok(markdown) => markdown,
             Err(error) => format!("Image preview unavailable: {error}"),
         };
         json!({"contents":{"kind":"markdown", "value":markdown}, "range":{
             "start":position_at(&document.text,start), "end":position_at(&document.text,end)}})
     }
+}
+
+// Keep hover payloads small even for photos or noisy images. Large inline URLs
+// are fragile across editor Markdown implementations and expensive to render.
+const MAX_PREVIEW_BYTES: usize = 6_000;
+
+fn embedded_preview(png: Vec<u8>) -> Result<String, String> {
+    let mut bytes = png;
+    let mut mime = "png";
+    if bytes.len() > MAX_PREVIEW_BYTES {
+        let mut image =
+            image::load_from_memory(&bytes).map_err(|_| "could not decode thumbnail.")?;
+        let opaque = image.to_rgba8().pixels().all(|pixel| pixel[3] == 255);
+        loop {
+            let mut encoded = Cursor::new(Vec::new());
+            if opaque {
+                mime = "jpeg";
+                image::codecs::jpeg::JpegEncoder::new_with_quality(&mut encoded, 70)
+                    .encode_image(&image.to_rgb8())
+                    .map_err(|_| "could not encode thumbnail.")?;
+            } else {
+                image
+                    .write_to(&mut encoded, ImageFormat::Png)
+                    .map_err(|_| "could not encode thumbnail.")?;
+            }
+            bytes = encoded.into_inner();
+            if bytes.len() <= MAX_PREVIEW_BYTES {
+                break;
+            }
+            image = image.thumbnail(
+                (image.width() * 3 / 4).max(1),
+                (image.height() * 3 / 4).max(1),
+            );
+        }
+    }
+    Ok(format!(
+        "![Image preview](data:image/{mime};base64,{})",
+        STANDARD.encode(bytes)
+    ))
 }
 
 fn image_path(document: &Document, byte: usize) -> Option<(usize, usize)> {

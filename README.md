@@ -7,17 +7,17 @@ Rust. The native server links directly to our generated Tree-sitter C parser;
 
 ## Install or rebuild locally
 
-Requirements: Python 3, Rust through rustup (including the `wasm32-wasip2` target),
-a native C compiler, and the WASI SDK downloaded by Zed.
+Requirements: Bash, Git, Rust through rustup (including the `wasm32-wasip2` target),
+a native C compiler, and the WASI SDK downloaded by Zed. Python is not required.
 
-From `ink-ext`:
+From the repository root:
 
 ```sh
-python3 scripts/build_dev.py
+bash scripts/build_dev.sh
 cargo test --locked -p ink-lsp
 ```
 
-In Zed, run **zed: install dev extension** and select this `ink-ext` directory.
+In Zed, run **zed: install dev extension** and select this repository directory.
 After rebuilding an installed extension, rebuild/reinstall it and run
 **editor: restart language server** if the open Ink buffer still uses the old server.
 
@@ -82,7 +82,7 @@ cargo test --locked -p ink-lsp
 The additional grammar/query/recovery/fuzz checks require Tree-sitter CLI 0.26.6:
 
 ```sh
-python3 scripts/test.py
+bash scripts/test.sh
 ```
 
 After changing `grammar.js` or the scanner, regenerate with Tree-sitter CLI:
@@ -91,7 +91,7 @@ After changing `grammar.js` or the scanner, regenerate with Tree-sitter CLI:
 cd tree-sitter-ink
 tree-sitter generate --abi 14
 cd ..
-python3 scripts/build_dev.py
+bash scripts/build_dev.sh
 ```
 
 Grammar generation uses JavaScript (Node.js by default, or the CLI's native JS
@@ -118,13 +118,15 @@ text. Hovering the path works with unsaved edits; changing the image on disk is
 reflected on the next hover.
 
 Supported formats: PNG, JPEG (`.jpg`/`.jpeg`), GIF, WebP, BMP, ICO, TIFF, and SVG.
-Previews preserve transparency and fit within 320 × 200 pixels. Raster images
+Previews preserve transparency and fit within 320 × 200 pixels. Large thumbnails
+are compressed or reduced further to keep hover responses below 8 KiB; opaque
+images may use JPEG, while transparent images use PNG. Raster images
 are not enlarged; animated images show a static first frame. SVGs are rendered
 with Rust/resvg, using embedded assets and system fonts; external image resources
 are not loaded. Web URLs and dynamic Ink expressions are not supported.
 Files over 20 MiB, decoding beyond the 256 MiB raster allocation limit, and
 missing or invalid images produce an explanatory hover.
 
-After updating, run `python3 scripts/build_dev.py`, reinstall this directory with
+After updating, run `bash scripts/build_dev.sh`, reinstall this directory with
 Zed's **Install Dev Extension**, then restart the Ink language server. Replace
 the example path with an existing image and hover over its filename.

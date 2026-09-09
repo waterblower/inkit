@@ -6,10 +6,10 @@
   "license": "MIT",
   "scripts": {
     "generate": "cd tree-sitter-ink && tree-sitter generate --abi 14",
-    "test": "python3 scripts/test.py && cargo test --locked -p ink-lsp",
-    "prepare:dev": "python3 scripts/prepare_dev.py",
-    "build:dev": "python3 scripts/build_dev.py",
+    "test": "bash scripts/test.sh",
+    "prepare:dev": "bash scripts/prepare_dev.sh",
+    "build:dev": "bash scripts/build_dev.sh",
     "test:navigation": "cargo test --locked -p ink-lsp",
-    "build:native": "python3 scripts/build_native.py"
+    "build:native": "bash scripts/build_native.sh"
   }
 }
