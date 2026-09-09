@@ -106,7 +106,9 @@ fn image_path(document: &Document, byte: usize) -> Option<(usize, usize)> {
     let mut cursor = node.walk();
     if node
         .named_children(&mut cursor)
-        .any(|child| child.kind() != "text")
+        // Backslashes in Windows file paths are Ink escape nodes, but remain
+        // literal path characters here. Expressions still aren't previewed.
+        .any(|child| !matches!(child.kind(), "text" | "escape"))
     {
         return None;
     }
@@ -224,6 +226,13 @@ fn preview_size(width: f32, height: f32, enlarge: bool) -> (u32, u32, f32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn windows_paths_are_literal_image_paths() {
+        let text = "# image: \"C:\\stories\\images\\door.svg\"\n";
+        let document = Document::new(&mut parser(), "file:///story.ink".into(), text.into());
+        let (start, end) = image_path(&document, 12).unwrap();
+        assert_eq!(&text[start..end], "C:\\stories\\images\\door.svg");
+    }
     #[test]
     fn preview_bounds_contain_all_aspect_ratios() {
         for (width, height) in [
