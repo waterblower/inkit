@@ -28,7 +28,8 @@ to start it. Release builds ignore the marker.
 The public `extension.toml` stays unchanged and pins a public grammar commit.
 
 The published extension uses a configured server or `ink-lsp` on PATH first,
-then downloads the platform-matching binary from the GitHub release pinned in
+then reuses a previously downloaded server for the current platform. Only if no
+server is installed does it download the binary from the GitHub release pinned in
 `src/lib.rs`. It uses a direct release asset URL, without calling the GitHub API.
 Prebuilt binaries support Apple Silicon and Intel macOS, x86-64 and ARM64 Linux,
 and x86-64 Windows. Other platforms can build the server from source.
@@ -39,8 +40,9 @@ builds the Zed extension and grammar, and publishes a GitHub release tagged
 `main-<commit SHA>`. Releases contain `inkit-extension.tar.gz`, the five
 `ink-lsp-<target>.tar.gz` archives, and `SHA256SUMS`. A release becomes visible
 only after all builds succeed and all assets are uploaded. The extension caches
-downloads by release tag. Update `SERVER_RELEASE` in `src/lib.rs` when selecting
-a newer published server for the registry extension.
+downloads by release tag and reuses them without network requests. Update
+`SERVER_RELEASE` in `src/lib.rs` to choose the release for new installations;
+existing installations are not automatically upgraded.
 
 On macOS the build uses Zed's cached WASI SDK. Elsewhere set `WASI_SDK_PATH` or
 pass `--wasi-sdk /path/to/wasi-sdk` to the build script. The compiler subprocess

@@ -5,6 +5,32 @@ const REPOSITORY: &str = "waterblower/inkit";
 const SERVER_RELEASE: &str = "main-12f0519270f8f29c0b23f2963ac582c871409c6a";
 struct InkExtension;
 
+fn installed_server(directory: &str, target: &str, filename: &str) -> Option<String> {
+    let preferred = format!("{directory}/{filename}");
+    if fs::metadata(&preferred).is_ok_and(|metadata| metadata.is_file()) {
+        return Some(preferred);
+    }
+    // Reuse an earlier installation instead of downloading just because the
+    // extension's preferred release changed. Ignore incomplete downloads.
+    let mut installed: Vec<_> = fs::read_dir(".")
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
+        .filter_map(|entry| {
+            let name = entry.file_name().into_string().ok()?;
+            if !name.starts_with("ink-lsp-") || !name.ends_with(&format!("-{target}")) {
+                return None;
+            }
+            let path = format!("{name}/{filename}");
+            fs::metadata(&path)
+                .is_ok_and(|metadata| metadata.is_file())
+                .then_some(path)
+        })
+        .collect();
+    installed.sort();
+    installed.pop()
+}
+
 impl zed::Extension for InkExtension {
     fn new() -> Self {
         Self
@@ -55,6 +81,13 @@ impl zed::Extension for InkExtension {
         } else {
             "ink-lsp"
         };
+        if let Some(command) = installed_server(&directory, target, filename) {
+            return Ok(Command {
+                command,
+                args: Vec::new(),
+                env: Default::default(),
+            });
+        }
         let executable = format!("{directory}/{filename}");
         if !fs::metadata(&executable).is_ok_and(|metadata| metadata.is_file()) {
             zed::set_language_server_installation_status(
