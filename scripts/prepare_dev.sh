@@ -37,7 +37,7 @@ cp lsp/Cargo.toml lsp/build.rs "$dev/lsp/"
 cp -R lsp/src "$dev/lsp/"
 checkout=$dev/grammars/ink
 if [[ ! -e $checkout ]]; then
-    git clone --quiet --no-checkout "$repository" "$checkout"
+    git clone --quiet "$repository" "$checkout"
 fi
 if [[ -n $(git -C "$checkout" status --porcelain) ]]; then
     echo "Grammar checkout has local edits: $checkout" >&2
