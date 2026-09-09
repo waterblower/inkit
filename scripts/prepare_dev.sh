@@ -30,8 +30,9 @@ done
 
 # Zed validates this checkout even when the grammar WASM is already built.
 dev=$root/.local/dev
-mkdir -p "$dev/grammars" "$dev/lsp"
-cp Cargo.toml Cargo.lock "$dev/"
+mkdir -p "$dev/grammars" "$dev/lsp" "$dev/.local"
+cp Cargo.toml Cargo.lock build.rs "$dev/"
+printf '%s/.local/native/ink-lsp\n' "$root" > "$dev/.local/dev-server-path"
 cp -R src languages "$dev/"
 cp lsp/Cargo.toml lsp/build.rs "$dev/lsp/"
 cp -R lsp/src "$dev/lsp/"

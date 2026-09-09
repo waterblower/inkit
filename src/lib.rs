@@ -2,6 +2,7 @@ use std::fs;
 use zed_extension_api::{self as zed, Command, LanguageServerId, Worktree};
 
 const REPOSITORY: &str = "waterblower/inkit";
+const SERVER_RELEASE: &str = "main-12f0519270f8f29c0b23f2963ac582c871409c6a";
 struct InkExtension;
 
 impl zed::Extension for InkExtension {
@@ -23,6 +24,14 @@ impl zed::Extension for InkExtension {
                 env: binary.env.unwrap_or_default().into_iter().collect(),
             });
         }
+        let local_server = env!("INKIT_DEV_SERVER");
+        if !local_server.is_empty() {
+            return Ok(Command {
+                command: local_server.to_owned(),
+                args: Vec::new(),
+                env: Default::default(),
+            });
+        }
         if let Some(path) = worktree.which("ink-lsp") {
             return Ok(Command {
                 command: path,
@@ -39,20 +48,7 @@ impl zed::Extension for InkExtension {
             (zed::Os::Windows, zed::Architecture::X8664) => "x86_64-pc-windows-msvc",
             _ => return Err("No prebuilt Ink server for this platform. Install ink-lsp on PATH or configure lsp.ink-navigation.binary.path.".into()),
         };
-        let release = zed::latest_github_release(
-            REPOSITORY,
-            zed::GithubReleaseOptions {
-                require_assets: true,
-                pre_release: false,
-            },
-        )?;
-        let version = &release.version;
-        if !version
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '.' | '_'))
-        {
-            return Err("Invalid release tag".into());
-        }
+        let version = SERVER_RELEASE;
         let directory = format!("ink-lsp-{version}-{target}");
         let filename = if matches!(os, zed::Os::Windows) {
             "ink-lsp.exe"
@@ -66,17 +62,10 @@ impl zed::Extension for InkExtension {
                 &zed::LanguageServerInstallationStatus::Downloading,
             );
             let asset_name = format!("ink-lsp-{target}.tar.gz");
-            let asset = release
-                .assets
-                .iter()
-                .find(|asset| asset.name == asset_name)
-                .ok_or_else(|| format!("Release {version} has no {asset_name}"))?;
+            let download_url =
+                format!("https://github.com/{REPOSITORY}/releases/download/{version}/{asset_name}");
             let staging = format!("{directory}.download");
-            zed::download_file(
-                &asset.download_url,
-                &staging,
-                zed::DownloadedFileType::GzipTar,
-            )?;
+            zed::download_file(&download_url, &staging, zed::DownloadedFileType::GzipTar)?;
             zed::make_file_executable(&format!("{staging}/{filename}"))?;
             fs::rename(&staging, &directory).map_err(|error| error.to_string())?;
         }

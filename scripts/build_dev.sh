@@ -31,4 +31,4 @@ bash scripts/build_native.sh
 RUSTC_WRAPPER= cargo build --locked --target wasm32-wasip2
 cp target/wasm32-wasip2/debug/zed_ink.wasm "$dev/extension.wasm"
 printf 'Built extension. In Zed, install the dev extension from %s\n' "$dev"
-printf 'To test the local server, set lsp.ink-navigation.binary.path to %s/.local/native/ink-lsp\n' "$PWD"
+printf 'The dev extension automatically uses %s/.local/native/ink-lsp\n' "$PWD"

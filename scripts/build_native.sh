@@ -9,3 +9,4 @@ executable=ink-lsp
 mkdir -p .local/native
 cp "target/$host/release/$executable" .local/native/ink-lsp
 printf '%s\n' "$host" > .local/native/host.txt
+printf '%s/.local/native/ink-lsp\n' "$PWD" > .local/dev-server-path
