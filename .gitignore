@@ -4,7 +4,6 @@ grammars/
 node_modules/
 *.wasm
 .DS_Store
-extension.toml
 
 target/
 __pycache__/

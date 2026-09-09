@@ -1,4 +1,4 @@
-# Ink for Zed
+# Inkit for Zed
 
 Ink highlighting, comment toggling, bracket matching, an outline, definition/reference
 navigation, and autocomplete. The language server and Zed adapter are written in
@@ -17,20 +17,27 @@ bash scripts/build_dev.sh
 cargo test --locked -p ink-lsp
 ```
 
-In Zed, run **zed: install dev extension** and select this repository directory.
+In Zed, run **zed: install dev extension** and select `.local/dev` in this repository.
 After rebuilding an installed extension, rebuild/reinstall it and run
 **editor: restart language server** if the open Ink buffer still uses the old server.
 
-The build generates `extension.toml`, snapshots the local grammar, compiles
-`grammars/ink.wasm`, builds a native `ink-lsp`, and embeds that executable in the
-Rust extension. The manifest and build artifacts are ignored by Git; the portable
-manifest source is `extension.toml.in`. The server is extracted to Zed's extension
-work directory and started without Node or a separate installation step.
+The build stages a dev extension under `.local/dev`, snapshots the local grammar,
+and builds the native server under `.local/native`. To test that server, set
+Zed's `lsp.ink-navigation.binary.path` to the absolute path printed by the build.
+The public `extension.toml` stays unchanged and pins a public grammar commit.
 
-The development build bundles a server for the machine where it was built.
-Rebuild on each target platform. For remote or separately installed servers,
-Zed's `lsp.ink-navigation.binary.path` setting can point to a compatible `ink-lsp`.
-The adapter reports an explicit error if its bundled platform does not match.
+The published extension uses a configured server or `ink-lsp` on PATH first,
+then downloads the platform-matching binary from this repository's latest GitHub release.
+Prebuilt binaries support Apple Silicon and Intel macOS, x86-64 and ARM64 Linux,
+and x86-64 Windows. Other platforms can build the server from source.
+No server executable is bundled inside the extension.
+
+Every push to `main` builds and tests the servers on all five supported platforms,
+builds the Zed extension and grammar, and publishes a GitHub release tagged
+`main-<commit SHA>`. Releases contain `inkit-extension.tar.gz`, the five
+`ink-lsp-<target>.tar.gz` archives, and `SHA256SUMS`. A release becomes visible
+only after all builds succeed and all assets are uploaded. The extension caches
+downloads by release tag; restart its language server to pick up a newer release.
 
 On macOS the build uses Zed's cached WASI SDK. Elsewhere set `WASI_SDK_PATH` or
 pass `--wasi-sdk /path/to/wasi-sdk` to the build script. The compiler subprocess
@@ -127,6 +134,6 @@ are not loaded. Web URLs and dynamic Ink expressions are not supported.
 Files over 20 MiB, decoding beyond the 256 MiB raster allocation limit, and
 missing or invalid images produce an explanatory hover.
 
-After updating, run `bash scripts/build_dev.sh`, reinstall this directory with
+After updating, run `bash scripts/build_dev.sh`, reinstall `.local/dev` with
 Zed's **Install Dev Extension**, then restart the Ink language server. Replace
 the example path with an existing image and hover over its filename.

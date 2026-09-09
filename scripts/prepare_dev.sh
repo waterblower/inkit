@@ -29,8 +29,13 @@ for ((i=0; i<${#snapshot}; i++)); do
 done
 
 # Zed validates this checkout even when the grammar WASM is already built.
-checkout=$root/grammars/ink
-mkdir -p "$root/grammars"
+dev=$root/.local/dev
+mkdir -p "$dev/grammars" "$dev/lsp"
+cp Cargo.toml Cargo.lock "$dev/"
+cp -R src languages "$dev/"
+cp lsp/Cargo.toml lsp/build.rs "$dev/lsp/"
+cp -R lsp/src "$dev/lsp/"
+checkout=$dev/grammars/ink
 if [[ ! -e $checkout ]]; then
     git clone --quiet --no-checkout "$repository" "$checkout"
 fi
@@ -51,5 +56,5 @@ fi
 git -C "$checkout" fetch --quiet origin "$rev"
 git -C "$checkout" -c core.hooksPath=/dev/null checkout --quiet --detach "$rev"
 sed -e "s|@GRAMMAR_REPOSITORY@|$repository|g" -e "s|@GRAMMAR_REV@|$rev|g" \
-    extension.toml.in > extension.toml
+    extension.toml.in > "$dev/extension.toml"
 printf 'Prepared Ink grammar %s\n' "$rev"

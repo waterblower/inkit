@@ -1,0 +1,108 @@
+name: Build and release Inkit
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+jobs:
+  extension:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust and WASI SDK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rustup update stable --no-self-update
+          rustup target add wasm32-wasip2
+          gh release download wasi-sdk-25 --repo WebAssembly/wasi-sdk --pattern wasi-sdk-25.0-x86_64-linux.tar.gz --dir "$RUNNER_TEMP"
+          tar -xzf "$RUNNER_TEMP/wasi-sdk-25.0-x86_64-linux.tar.gz" -C "$RUNNER_TEMP"
+      - name: Check and build extension
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          cargo build --locked --release --target wasm32-wasip2
+          mkdir -p dist/inkit/grammars
+          "$RUNNER_TEMP/wasi-sdk-25.0-x86_64-linux/bin/clang" -fPIC -shared -Os \
+            -Wl,--export=tree_sitter_ink -I tree-sitter-ink/src \
+            tree-sitter-ink/src/parser.c tree-sitter-ink/src/scanner.c \
+            -o dist/inkit/grammars/ink.wasm
+          cp target/wasm32-wasip2/release/zed_ink.wasm dist/inkit/extension.wasm
+          cp extension.toml LICENSE README.md dist/inkit/
+          cp -R languages dist/inkit/
+          tar -czf dist/inkit-extension.tar.gz -C dist/inkit .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inkit-extension
+          path: dist/inkit-extension.tar.gz
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: aarch64-apple-darwin
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        shell: bash
+        run: rustup update stable --no-self-update
+      - name: Test and build
+        shell: bash
+        run: |
+          cargo test --locked -p ink-lsp
+          cargo build --locked --release -p ink-lsp --target ${{ matrix.target }}
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          binary=ink-lsp
+          if [[ '${{ runner.os }}' == Windows ]]; then binary=ink-lsp.exe; fi
+          tar -czf dist/ink-lsp-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release "$binary"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ink-lsp-${{ matrix.target }}
+          path: dist/*.tar.gz
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: [extension, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          release_tag="main-$RELEASE_COMMIT"
+          cd dist
+          sha256sum *.tar.gz > SHA256SUMS
+          # Upload everything to a draft before exposing it to the extension.
+          if ! gh release view "$release_tag" > /dev/null 2>&1; then
+            gh release create "$release_tag" --target "$RELEASE_COMMIT" --draft \
+              --title "Inkit ${RELEASE_COMMIT:0:7}" \
+              --notes "Built from main at $RELEASE_COMMIT. Includes the compiled Zed extension and Ink language server binaries for macOS, Linux, and Windows."
+          fi
+          if [[ $(gh release view "$release_tag" --json isDraft --jq .isDraft) == true ]]; then
+            gh release upload "$release_tag" ./*.tar.gz SHA256SUMS --clobber
+            gh release edit "$release_tag" --draft=false --latest
+          fi

@@ -1,19 +1,18 @@
 use std::fs;
 use zed_extension_api::{self as zed, Command, LanguageServerId, Worktree};
 
+const REPOSITORY: &str = "waterblower/inkit";
 struct InkExtension;
 
 impl zed::Extension for InkExtension {
     fn new() -> Self {
         Self
     }
-
     fn language_server_command(
         &mut self,
         language_server_id: &LanguageServerId,
         worktree: &Worktree,
     ) -> zed::Result<Command> {
-        // Allow a separately built binary (e.g. on a remote host) to be configured.
         if let Some(binary) =
             zed::settings::LspSettings::for_worktree(language_server_id.as_ref(), worktree)?.binary
             && let Some(path) = binary.path
@@ -24,50 +23,69 @@ impl zed::Extension for InkExtension {
                 env: binary.env.unwrap_or_default().into_iter().collect(),
             });
         }
-        let host = include_str!("../.local/native/host.txt").trim();
+        if let Some(path) = worktree.which("ink-lsp") {
+            return Ok(Command {
+                command: path,
+                args: Vec::new(),
+                env: Default::default(),
+            });
+        }
         let (os, arch) = zed::current_platform();
-        let os_matches = match os {
-            zed::Os::Mac => host.contains("apple-darwin"),
-            zed::Os::Linux => host.contains("linux"),
-            zed::Os::Windows => host.contains("windows"),
+        let target = match (os, arch) {
+            (zed::Os::Mac, zed::Architecture::Aarch64) => "aarch64-apple-darwin",
+            (zed::Os::Mac, zed::Architecture::X8664) => "x86_64-apple-darwin",
+            (zed::Os::Linux, zed::Architecture::Aarch64) => "aarch64-unknown-linux-gnu",
+            (zed::Os::Linux, zed::Architecture::X8664) => "x86_64-unknown-linux-gnu",
+            (zed::Os::Windows, zed::Architecture::X8664) => "x86_64-pc-windows-msvc",
+            _ => return Err("No prebuilt Ink server for this platform. Install ink-lsp on PATH or configure lsp.ink-navigation.binary.path.".into()),
         };
-        let arch_matches = match arch {
-            zed::Architecture::Aarch64 => host.starts_with("aarch64-"),
-            zed::Architecture::X8664 => host.starts_with("x86_64-"),
-            zed::Architecture::X86 => host.starts_with("i686-") || host.starts_with("i586-"),
-        };
-        if !os_matches || !arch_matches {
-            return Err(format!(
-                "This Ink dev extension bundles a server for {host}. Rebuild on this host or configure lsp.ink-navigation.binary.path."
-            ));
+        let release = zed::latest_github_release(
+            REPOSITORY,
+            zed::GithubReleaseOptions {
+                require_assets: true,
+                pre_release: false,
+            },
+        )?;
+        let version = &release.version;
+        if !version
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '.' | '_'))
+        {
+            return Err("Invalid release tag".into());
         }
-        let contents = include_bytes!("../.local/native/ink-lsp");
-        // A content fingerprint avoids overwriting a running executable on
-        // platforms that lock it. New builds get a distinct executable path.
-        let fingerprint = contents.iter().fold(0xcbf29ce484222325_u64, |hash, byte| {
-            (hash ^ *byte as u64).wrapping_mul(0x100000001b3)
-        });
-        let directory = std::env::current_dir()
-            .map_err(|err| err.to_string())?
-            .join("ink-native");
-        fs::create_dir_all(&directory).map_err(|err| err.to_string())?;
-        let suffix = if matches!(os, zed::Os::Windows) {
-            ".exe"
+        let directory = format!("ink-lsp-{version}-{target}");
+        let filename = if matches!(os, zed::Os::Windows) {
+            "ink-lsp.exe"
         } else {
-            ""
+            "ink-lsp"
         };
-        let executable = directory.join(format!("ink-lsp-{fingerprint:016x}{suffix}"));
-        if !executable.exists() {
-            fs::write(&executable, contents).map_err(|err| err.to_string())?;
+        let executable = format!("{directory}/{filename}");
+        if !fs::metadata(&executable).is_ok_and(|metadata| metadata.is_file()) {
+            zed::set_language_server_installation_status(
+                language_server_id,
+                &zed::LanguageServerInstallationStatus::Downloading,
+            );
+            let asset_name = format!("ink-lsp-{target}.tar.gz");
+            let asset = release
+                .assets
+                .iter()
+                .find(|asset| asset.name == asset_name)
+                .ok_or_else(|| format!("Release {version} has no {asset_name}"))?;
+            let staging = format!("{directory}.download");
+            zed::download_file(
+                &asset.download_url,
+                &staging,
+                zed::DownloadedFileType::GzipTar,
+            )?;
+            zed::make_file_executable(&format!("{staging}/{filename}"))?;
+            fs::rename(&staging, &directory).map_err(|error| error.to_string())?;
         }
-        let command = executable.to_string_lossy().into_owned();
-        zed::make_file_executable(&command)?;
+        zed::make_file_executable(&executable)?;
         Ok(Command {
-            command,
+            command: executable,
             args: Vec::new(),
             env: Default::default(),
         })
     }
 }
-
 zed::register_extension!(InkExtension);

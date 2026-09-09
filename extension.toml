@@ -7,8 +7,9 @@ repository = "https://github.com/waterblower/inkit"
 description = "Ink narrative editing: highlighting, completion, definitions, and references."
 
 [grammars.ink]
-repository = "@GRAMMAR_REPOSITORY@"
-rev = "@GRAMMAR_REV@"
+repository = "https://github.com/waterblower/inkit"
+rev = "c8c7a64f685b725ffd9c6f36ce5bc560116b9cf5"
+path = "tree-sitter-ink"
 
 [language_servers.ink-navigation]
 name = "Ink Language Server"
