@@ -1,0 +1,38 @@
+==================
+headings
+==================
+== start
+=== hall(ref visits, -> next) ===
+= inside
+=== function double(x) ===
+~ return x * 2
+
+---
+
+(source_file
+  (knot
+    (knot_marker)
+    (identifier))
+  (knot
+    (knot_marker)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier))
+      (parameter
+        (identifier)))
+    (knot_marker))
+  (stitch
+    (identifier))
+  (function
+    (knot_marker)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)))
+    (knot_marker))
+  (logic
+    (return_statement
+      (binary_expression
+        (identifier)
+        (number)))))

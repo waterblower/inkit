@@ -1,0 +1,45 @@
+==================
+inline
+==================
+{courage} steps; {courage > 1:many|one}.
+{red|green|blue} {&one|two} {!once|} {~heads|tails}
+Hello <> again. # speaker: alice # mood: happy
+
+---
+
+(source_file
+  (content
+    (inline_expression
+      (identifier))
+    (text)
+    (conditional
+      (binary_expression
+        (identifier)
+        (number))
+      (text)
+      (text))
+    (text))
+  (content
+    (sequence
+      (text)
+      (text)
+      (text))
+    (sequence
+      (sequence_modifier)
+      (text)
+      (text))
+    (sequence
+      (sequence_modifier)
+      (text))
+    (sequence
+      (sequence_modifier)
+      (text)
+      (text)))
+  (content
+    (text)
+    (glue)
+    (text)
+    (tag
+      (text))
+    (tag
+      (text))))

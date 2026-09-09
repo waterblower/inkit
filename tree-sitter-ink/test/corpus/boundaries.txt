@@ -1,0 +1,215 @@
+==================
+boundaries
+==================
+=== 起点 ===
+  = 房间
+    你好！(括号) 和 "引号" are prose.
+* LIST is just choice text. # VAR is a tag
+{count} + 1 is text. {count} - another thing.
+{count} CONST is narrative.
+{a || b} {a && b} {not a}
+{a || b:yes|no}
+{red|blue: darker}
+{!Only once.} {&Cycle.}
+{a:{b:inner|other}|outer}
+* * (nested) {count > 0} [A {count} choice] -> next.room(1, true)
+-> next.room(1) -> other ->
+->->
+->-> next.room(2)
+{shuffle:
+- Red: scarlet.
+- Blue: sky.
+}
+{&
+- First.
+- Second.
+}
+{
+- a:
+    {b:
+    Inside.
+    - else:
+    Outside.
+    }
+- else:
+No.
+}
+~ temp x = (1 + 2) * -3
+~ temp y = ()
+~ temp z = (mood.happy)
+~ temp q = LIST_COUNT(mood) > 0 and mood has mood.happy
+~ return
+
+---
+
+(source_file
+  (knot
+    (knot_marker)
+    (identifier)
+    (knot_marker))
+  (stitch
+    (identifier))
+  (content
+    (text))
+  (choice
+    (choice_marker)
+    (text)
+    (tag
+      (text)))
+  (content
+    (inline_expression
+      (identifier))
+    (text)
+    (inline_expression
+      (identifier))
+    (text))
+  (content
+    (inline_expression
+      (identifier))
+    (text))
+  (content
+    (inline_expression
+      (binary_expression
+        (identifier)
+        (identifier)))
+    (inline_expression
+      (binary_expression
+        (identifier)
+        (identifier)))
+    (inline_expression
+      (unary_expression
+        (identifier))))
+  (content
+    (conditional
+      (binary_expression
+        (identifier)
+        (identifier))
+      (text)
+      (text)))
+  (content
+    (sequence
+      (text)
+      (text)))
+  (content
+    (sequence
+      (sequence_modifier)
+      (text))
+    (sequence
+      (sequence_modifier)
+      (text)))
+  (content
+    (conditional
+      (identifier)
+      (conditional
+        (identifier)
+        (text)
+        (text))
+      (text)))
+  (choice
+    (choice_marker)
+    (label
+      (identifier))
+    (inline_expression
+      (binary_expression
+        (identifier)
+        (number)))
+    (choice_text
+      (text)
+      (inline_expression
+        (identifier))
+      (text))
+    (divert
+      (divert_destination
+        (path
+          (identifier)
+          (identifier))
+        (arguments
+          (number)
+          (boolean)))))
+  (content
+    (divert
+      (divert_destination
+        (path
+          (identifier)
+          (identifier))
+        (arguments
+          (number)))
+      (divert_destination
+        (path
+          (identifier)))))
+  (content
+    (tunnel_return))
+  (content
+    (tunnel_return
+      (path
+        (identifier)
+        (identifier))
+      (arguments
+        (number))))
+  (content
+    (multiline_sequence
+      (sequence_type)
+      (sequence_branch
+        (text))
+      (sequence_branch
+        (text))))
+  (content
+    (multiline_sequence
+      (sequence_modifier)
+      (sequence_branch
+        (text))
+      (sequence_branch
+        (text))))
+  (content
+    (multiline_block
+      (branch
+        (identifier))
+      (content
+        (multiline_block
+          (identifier)
+          (content
+            (text))
+          (branch)
+          (content
+            (text))))
+      (branch)
+      (content
+        (text))))
+  (logic
+    (assignment
+      (identifier)
+      (binary_expression
+        (parenthesized_expression
+          (binary_expression
+            (number)
+            (number)))
+        (unary_expression
+          (number)))))
+  (logic
+    (assignment
+      (identifier)
+      (list_expression)))
+  (logic
+    (assignment
+      (identifier)
+      (parenthesized_expression
+        (path_expression
+          (identifier)
+          (identifier)))))
+  (logic
+    (assignment
+      (identifier)
+      (binary_expression
+        (binary_expression
+          (call
+            (identifier)
+            (arguments
+              (identifier)))
+          (number))
+        (binary_expression
+          (identifier)
+          (path_expression
+            (identifier)
+            (identifier))))))
+  (logic
+    (return_statement)))

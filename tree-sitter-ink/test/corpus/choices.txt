@@ -1,0 +1,42 @@
+==================
+choices
+==================
+* (hello) {courage > 0} [Say hello] Hello! -> hall
++ + [Stay] -> start
+- (joined) We meet again.
+- - A deeper gather.
+
+---
+
+(source_file
+  (choice
+    (choice_marker)
+    (label
+      (identifier))
+    (inline_expression
+      (binary_expression
+        (identifier)
+        (number)))
+    (choice_text
+      (text))
+    (text)
+    (divert
+      (divert_destination
+        (path
+          (identifier)))))
+  (choice
+    (choice_marker)
+    (choice_text
+      (text))
+    (divert
+      (divert_destination
+        (path
+          (identifier)))))
+  (gather
+    (gather_marker)
+    (label
+      (identifier))
+    (text))
+  (gather
+    (gather_marker)
+    (text)))

@@ -1,0 +1,56 @@
+==================
+logic
+==================
+~ temp score = courage * 2 + 1
+~ score += 1
+~ courage++
+~ notify("Hello {courage}")
+~ temp items = (mood.calm, mood.happy)
+~ temp okay = not false and courage >= -2
+
+---
+
+(source_file
+  (logic
+    (assignment
+      (identifier)
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (number))
+        (number))))
+  (logic
+    (assignment
+      (identifier)
+      (number)))
+  (logic
+    (update_expression
+      (identifier)))
+  (logic
+    (call
+      (identifier)
+      (arguments
+        (string
+          (string_content)
+          (inline_expression
+            (identifier))))))
+  (logic
+    (assignment
+      (identifier)
+      (list_expression
+        (path_expression
+          (identifier)
+          (identifier))
+        (path_expression
+          (identifier)
+          (identifier)))))
+  (logic
+    (assignment
+      (identifier)
+      (binary_expression
+        (unary_expression
+          (boolean))
+        (binary_expression
+          (identifier)
+          (unary_expression
+            (number)))))))

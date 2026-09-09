@@ -1,0 +1,25 @@
+==================
+prose
+==================
+你好，“Welcome,” she said (quietly).
+A slash / and hyphen - are prose.
+VARIABLE remains prose.
+Escaped \#tag and \{braces\}.
+
+---
+
+(source_file
+  (content
+    (text))
+  (content
+    (text))
+  (content
+    (text))
+  (content
+    (text)
+    (escape)
+    (text)
+    (escape)
+    (text)
+    (escape)
+    (text)))

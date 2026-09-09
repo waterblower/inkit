@@ -1,0 +1,50 @@
+==================
+blocks
+==================
+{ courage > 0:
+You can enter.
+- else:
+Try later.
+}
+{
+- courage == 1:
+One.
+- else:
+More.
+}
+{shuffle stopping:
+- First: yes.
+- Second.
+}
+
+---
+
+(source_file
+  (content
+    (multiline_block
+      (binary_expression
+        (identifier)
+        (number))
+      (content
+        (text))
+      (branch)
+      (content
+        (text))))
+  (content
+    (multiline_block
+      (branch
+        (binary_expression
+          (identifier)
+          (number)))
+      (content
+        (text))
+      (branch)
+      (content
+        (text))))
+  (content
+    (multiline_sequence
+      (sequence_type)
+      (sequence_branch
+        (text))
+      (sequence_branch
+        (text)))))

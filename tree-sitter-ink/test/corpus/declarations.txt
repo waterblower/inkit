@@ -1,0 +1,43 @@
+==================
+declarations
+==================
+INCLUDE chapters/intro.ink
+VAR courage = 2
+CONST limit = -10
+VAR destination = -> hall
+LIST mood = calm, (happy), sad = 3
+EXTERNAL notify(message)
+TODO: finish this
+
+---
+
+(source_file
+  (include
+    (include_path))
+  (variable_declaration
+    (identifier)
+    (number))
+  (constant_declaration
+    (identifier)
+    (unary_expression
+      (number)))
+  (variable_declaration
+    (identifier)
+    (divert_target
+      (path
+        (identifier))))
+  (list_declaration
+    (identifier)
+    (list_item
+      (identifier))
+    (list_item
+      (identifier))
+    (list_item
+      (identifier)
+      (number)))
+  (external_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier))))
+  (todo))

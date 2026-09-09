@@ -1,0 +1,17 @@
+id = "ink"
+name = "Ink"
+version = "0.3.0"
+schema_version = 1
+authors = ["Ink extension contributors"]
+description = "Ink narrative editing: highlighting, completion, definitions, and references."
+
+[grammars.ink]
+repository = "@GRAMMAR_REPOSITORY@"
+rev = "@GRAMMAR_REV@"
+
+[language_servers.ink-navigation]
+name = "Ink Language Server"
+languages = ["Ink"]
+
+[language_servers.ink-navigation.language_ids]
+Ink = "ink"

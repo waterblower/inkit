@@ -1,0 +1,15 @@
+{
+  "name": "zed-ink-development",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Zed editing support and original Tree-sitter grammar for Ink",
+  "license": "MIT",
+  "scripts": {
+    "generate": "cd tree-sitter-ink && tree-sitter generate --abi 14",
+    "test": "python3 scripts/test.py && cargo test --locked -p ink-lsp",
+    "prepare:dev": "python3 scripts/prepare_dev.py",
+    "build:dev": "python3 scripts/build_dev.py",
+    "test:navigation": "cargo test --locked -p ink-lsp",
+    "build:native": "python3 scripts/build_native.py"
+  }
+}

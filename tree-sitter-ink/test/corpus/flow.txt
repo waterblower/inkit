@@ -1,0 +1,32 @@
+==================
+flow
+==================
+-> hall -> next.room(1) ->
+<- background
+->-> hall
+->->
+
+---
+
+(source_file
+  (content
+    (divert
+      (divert_destination
+        (path
+          (identifier)))
+      (divert_destination
+        (path
+          (identifier)
+          (identifier))
+        (arguments
+          (number)))))
+  (content
+    (thread
+      (path
+        (identifier))))
+  (content
+    (tunnel_return
+      (path
+        (identifier))))
+  (content
+    (tunnel_return)))

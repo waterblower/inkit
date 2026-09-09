@@ -1,0 +1,4 @@
+{
+  "grammars": [{"name": "ink", "camelcase": "Ink", "scope": "source.ink", "path": ".", "file-types": ["ink"]}],
+  "metadata": {"version": "0.1.0", "license": "MIT", "description": "Ink narrative language grammar", "authors": [{"name": "Ink extension contributors"}]}
+}

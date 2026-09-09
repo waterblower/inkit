@@ -1,0 +1,21 @@
+==================
+comments
+==================
+// line
+/* multiple
+lines */
+VAR a = 1 // logic comment
+Hello // narrative comment
+
+---
+
+(source_file
+  (comment)
+  (comment)
+  (variable_declaration
+    (identifier)
+    (number))
+  (comment)
+  (content
+    (text))
+  (comment))
